@@ -2,11 +2,7 @@ import { isNil } from 'lodash'
 import React, { useCallback } from 'react'
 import { useCombobox } from 'downshift'
 
-import {
-  getSelectedItem,
-  itemToString,
-  SelectLayout,
-} from '../SelectBase'
+import { getSelectedItem, itemToString, SelectLayout } from '../SelectBase'
 import { useAutocomplete } from '../Autocomplete/hooks/useAutocomplete'
 import { useToggleButton } from '../Autocomplete/hooks/useToggleButton'
 import { useExternalId } from '../../hooks/useExternalId'
@@ -14,13 +10,9 @@ import { useHighlightedIndex } from '../Autocomplete/hooks/useHighlightedIndex'
 import { useMenuVisibility } from '../SelectBase/hooks/useMenuVisibility'
 import { AutocompleteProps } from '../Autocomplete'
 
-// export interface ComboboxProps extends AutocompleteProps {
-//   onNotInList?: (newValue: string) => void
-// }
-
 export type ComboboxProps = Omit<
   AutocompleteProps,
-  'initialIsOpen' | 'onBlur' | 'value'| 'hideClearButton'
+  'initialIsOpen' | 'onBlur' | 'value' | 'hideClearButton'
 > & {
   /**
    * Called after the text input is changed and there is no match
