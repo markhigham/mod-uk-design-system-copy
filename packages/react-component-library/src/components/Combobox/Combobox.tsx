@@ -1,51 +1,192 @@
-import React, { useCallback, useState } from 'react'
-import { Autocomplete, AutocompleteProps } from '../Autocomplete'
-import { SelectChildrenType } from '../SelectBase'
+import { isNil } from 'lodash'
+import React, { useCallback } from 'react'
+import { useCombobox } from 'downshift'
 
-export interface ComboboxProps  {
-  onNotInList?: (text: string) => void
-  value?: string | null
-  initialText?: string | null
-  label: string
-  children: SelectChildrenType
-  isDisabled?: boolean
+import {
+  getSelectedItem,
+  itemToString,
+  SelectBaseProps,
+  SelectLayout,
+} from '../SelectBase'
+import { NoResults } from '../Autocomplete/NoResults'
+import { useAutocomplete } from '../Autocomplete/hooks/useAutocomplete'
+import { useToggleButton } from '../Autocomplete/hooks/useToggleButton'
+import { useExternalId } from '../../hooks/useExternalId'
+import { useHighlightedIndex } from '../Autocomplete/hooks/useHighlightedIndex'
+import { useMenuVisibility } from '../SelectBase/hooks/useMenuVisibility'
+
+
+export interface AutocompleteProps extends SelectBaseProps {
+  /**
+   * Whether to hide the clear button. (Note that the component can still
+   * be cleared by manually deleting the text in the input.)
+   */
+  hideClearButton?: boolean
+  /**
+   * Called when the input loses focus.
+   */
+  onBlur?: (event: React.FocusEvent) => void
 }
 
-export const Combobox: React.FC<ComboboxProps> = (props) => {
-  const {value,initialText, isDisabled} = props
-  const [inputBoxTextValue, setInputBoxTextValue] = useState(initialText)
-  const [selectedValue, setSelectedValue] = useState(initialText)
+export const Combobox: React.FC<AutocompleteProps> = ({
+                                                            children,
+                                                            id: externalId,
+                                                            initialIsOpen,
+                                                            initialValue,
+                                                            isInvalid = false,
+                                                            onBlur,
+                                                            onChange,
+                                                            value,
+                                                            ...rest
+                                                          }) => {
+  const {
+    filteredItems,
+    hasError,
+    hasFilter,
+    inputRef,
+    itemsMap,
+    onInputValueChange,
+    onIsOpenChange,
+    onSelectedItemChange,
+  } = useAutocomplete(React.Children.toArray(children))
 
-  const [isNotInList, setIsNotInList] = useState(false)
-  const [hideClearButton, setHideClearButton] = useState(false)
+  const {
+    buttonRef,
+    focusToggleButton,
+    onInputEscapeKeyHandler,
+    onToggleButtonKeyDownHandler,
+  } = useToggleButton(inputRef)
+  const id = useExternalId('autocomplete', externalId)
 
-  const handleOnBlur = useCallback((event: React.FocusEvent) => {
-    setInputBoxTextValue((event.target as HTMLInputElement).value)
-    console.log((event.target as HTMLInputElement).value)
-    console.log(inputBoxTextValue === value)
-    // setIsNotInList()
+  const isControlled = value !== undefined
 
-  }, [inputBoxTextValue, value])
+  const {
+    getComboboxProps,
+    getInputProps,
+    getItemProps,
+    getMenuProps,
+    getToggleButtonProps,
+    highlightedIndex,
+    inputValue,
+    isOpen = false,
+    openMenu,
+    reset,
+    selectedItem,
+    setHighlightedIndex,
+    setInputValue,
+  } = useCombobox<string>({
+    initialIsOpen,
+    items: filteredItems.map((item) => item.props.value),
+    itemToString: (item) => itemToString(item, itemsMap),
+    onInputValueChange,
+    onIsOpenChange,
+    onSelectedItemChange: (changes) => {
+      onSelectedItemChange(changes)
 
-  const handleChange = (v: string| null)=> {
-    console.log(v, inputBoxTextValue)
-    setHideClearButton(false)
-  }
+      const { selectedItem: newValue } = changes
+
+      if (onChange) {
+        onChange(newValue ?? null)
+      }
+
+      focusToggleButton()
+    },
+    ...{
+      [isControlled ? 'selectedItem' : 'initialSelectedItem']: getSelectedItem(
+        isControlled ? value : initialValue,
+        itemsMap
+      ),
+    },
+  })
+
+  const { onInputBlurHandler, onInputTabKeyHandler } = useHighlightedIndex(
+    highlightedIndex,
+    inputValue,
+    isOpen,
+    filteredItems,
+    setHighlightedIndex,
+    setInputValue
+  )
+
+  const { onInputFocusHandler } = useMenuVisibility(isOpen, openMenu)
+
+  const handleInputBlur: React.FocusEventHandler<HTMLInputElement> =
+    useCallback(
+      (...args) => {
+        onInputBlurHandler()
+        onBlur?.(...args)
+      },
+      [onBlur, onInputBlurHandler]
+    )
+
+  const handleInputScroll: React.UIEventHandler<HTMLInputElement> = useCallback(
+    (event) => {
+      const input = event.currentTarget
+
+      if (document.activeElement !== input && !hasFilter) {
+        // Scroll to the beginning of the input in Firefox
+        input.scrollLeft = 0
+      }
+    },
+    [hasFilter]
+  )
+
+  const selectedItemText =
+    isNil(selectedItem) || hasFilter
+      ? ''
+      : itemsMap[selectedItem].props.children
 
   return (
-    <div>
-      external value:{value}<br/>
-      inputBox value:{inputBoxTextValue}<br/>
-      selected value:{selectedValue}<br/>
-      <Autocomplete
-        isDisabled={isDisabled}
-        {...props}
-        onBlur={handleOnBlur}
-        value={value}
-        onChange={handleChange}
-        hideClearButton={hideClearButton}
-      />
-    </div>
+    <SelectLayout
+      hasLabelFocus={isOpen}
+      hasSelectedItem={!!inputValue}
+      id={id}
+      inputProps={getInputProps({
+        onBlur: handleInputBlur,
+        onFocus: onInputFocusHandler,
+        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+          onInputTabKeyHandler(e)
+          onInputEscapeKeyHandler(e)
+        },
+        onScroll: handleInputScroll,
+        ref: inputRef,
+      })}
+      inputWrapperProps={getComboboxProps({
+        'aria-expanded': isOpen,
+      })}
+      isInvalid={hasError || isInvalid}
+      isOpen={isOpen}
+      menuProps={getMenuProps()}
+      onClearButtonClick={() => {
+        reset()
+      }}
+      toggleButtonProps={getToggleButtonProps({
+        onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => {
+          onToggleButtonKeyDownHandler(e)
+        },
+        ref: buttonRef,
+      })}
+      tooltipText={selectedItemText}
+      {...rest}
+    >
+      {isOpen &&
+        filteredItems.map((child, index) => {
+          return React.cloneElement(child, {
+            ...child.props,
+            ...getItemProps({
+              index,
+              item: child.props.value,
+              key: `autocomplete-option-${child.props.value}`,
+            }),
+            inputValue,
+            isHighlighted: highlightedIndex === index,
+            title: child.props.children,
+          })
+        })}
+      {inputValue && !filteredItems.length && (
+        <NoResults>{inputValue}</NoResults>
+      )}
+    </SelectLayout>
   )
 }
 

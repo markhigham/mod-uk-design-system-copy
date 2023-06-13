@@ -5,6 +5,7 @@ import styled from 'styled-components'
 
 import { Combobox } from '.'
 import { AutocompleteOption } from '../Autocomplete'
+import { useArgs } from '@storybook/addons'
 
 
 export default {
@@ -23,14 +24,18 @@ const StyledWrapper = styled.div<{ $isDisabled?: boolean }>`
   max-width: 20rem;
 `
 
-const Template: ComponentStory<typeof Combobox> = (args) => (
-  <StyledWrapper $isDisabled={args.isDisabled}>
-    <Combobox {...args}>
-      <AutocompleteOption value="one">One</AutocompleteOption>
-      <AutocompleteOption value="two">Two</AutocompleteOption>
-      <AutocompleteOption value="three">Three</AutocompleteOption>
-    </Combobox>
-  </StyledWrapper>
-)
+const Template: ComponentStory<typeof Combobox> = (args) => {
+  const [{value}, updateArgs] = useArgs()
+  return (
+    <StyledWrapper $isDisabled={args.isDisabled}>
+      {value}
+      <Combobox {...args} value={value} onChange={(v)=> {updateArgs({value: v})}}>
+        <AutocompleteOption value="one">One</AutocompleteOption>
+        <AutocompleteOption value="two">Two</AutocompleteOption>
+        <AutocompleteOption value="three">Three</AutocompleteOption>
+      </Combobox>
+    </StyledWrapper>
+  )
+}
 
 export const Default = Template.bind({})
