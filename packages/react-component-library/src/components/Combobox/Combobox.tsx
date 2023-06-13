@@ -17,6 +17,7 @@ import { useMenuVisibility } from '../SelectBase/hooks/useMenuVisibility'
 import { AutocompleteProps } from '../Autocomplete'
 
 export interface ComboboxProps extends AutocompleteProps {
+  text?: string
   onNotInList?: (newValue: string) => void
 }
 
@@ -129,8 +130,27 @@ export const Combobox: React.FC<ComboboxProps> = ({
       ? ''
       : itemsMap[selectedItem].props.children
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && isNewValue) {
+      if (onNotInList) {
+        onNotInList(inputValue)
+      }
 
-  const isNewValue= !!(inputValue && !filteredItems.length)
+      // @ts-ignore - prevents the inputText being reset
+      e.nativeEvent.preventDownshiftDefault = true
+    }
+
+    if (e.key === 'Tab' && isNewValue) {
+      if (onNotInList) {
+        onNotInList(inputValue)
+      }
+    }
+
+    onInputTabKeyHandler(e)
+    onInputEscapeKeyHandler(e)
+  }
+
+  const isNewValue = !!(inputValue && !filteredItems.length)
   const hasMatches = !isNewValue
 
   return (
@@ -142,14 +162,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
       inputProps={getInputProps({
         onBlur: handleInputBlur,
         onFocus: onInputFocusHandler,
-        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-          onInputTabKeyHandler(e)
-          onInputEscapeKeyHandler(e)
-
-          
-
-
-        },
+        onKeyDown: handleKeyDown,
         onScroll: handleInputScroll,
         ref: inputRef,
       })}
@@ -185,6 +198,9 @@ export const Combobox: React.FC<ComboboxProps> = ({
             title: child.props.children,
           })
         })}
+      {inputValue && !filteredItems.length && (
+        <NoResults>{inputValue}</NoResults>
+      )}
     </SelectLayout>
   )
 }
