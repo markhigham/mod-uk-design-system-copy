@@ -14,31 +14,23 @@ import { useToggleButton } from '../Autocomplete/hooks/useToggleButton'
 import { useExternalId } from '../../hooks/useExternalId'
 import { useHighlightedIndex } from '../Autocomplete/hooks/useHighlightedIndex'
 import { useMenuVisibility } from '../SelectBase/hooks/useMenuVisibility'
+import { AutocompleteProps } from '../Autocomplete'
 
-
-export interface AutocompleteProps extends SelectBaseProps {
-  /**
-   * Whether to hide the clear button. (Note that the component can still
-   * be cleared by manually deleting the text in the input.)
-   */
-  hideClearButton?: boolean
-  /**
-   * Called when the input loses focus.
-   */
-  onBlur?: (event: React.FocusEvent) => void
+export interface ComboboxProps extends AutocompleteProps {
+  onNotInList?: (newValue: string) => void
 }
 
-export const Combobox: React.FC<AutocompleteProps> = ({
-                                                            children,
-                                                            id: externalId,
-                                                            initialIsOpen,
-                                                            initialValue,
-                                                            isInvalid = false,
-                                                            onBlur,
-                                                            onChange,
-                                                            value,
-                                                            ...rest
-                                                          }) => {
+export const Combobox: React.FC<ComboboxProps> = ({
+  children,
+  id: externalId,
+  initialIsOpen,
+  initialValue,
+  isInvalid = false,
+  onBlur,
+  onChange,
+  value,
+  ...rest
+}) => {
   const {
     filteredItems,
     hasError,
