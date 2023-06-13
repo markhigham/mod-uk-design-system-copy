@@ -34,7 +34,7 @@ const Template: ComponentStory<typeof Combobox> = (args) => {
 
   return (
     <StyledWrapper $isDisabled={args.isDisabled}>
-      is new item: {isNew ? 'yes': 'no'}
+      is new item: {isNew ? 'yes' : 'no'}
       <br />
       Selected value:{value}
       <br />
@@ -42,6 +42,7 @@ const Template: ComponentStory<typeof Combobox> = (args) => {
       <br />
       <Combobox
         {...args}
+        // initialValue="one"
         onNotInList={(newValue) => {
           setValues((p) => {
             return { value: '', text: newValue, isNew: true }

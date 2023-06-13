@@ -5,10 +5,8 @@ import { useCombobox } from 'downshift'
 import {
   getSelectedItem,
   itemToString,
-  SelectBaseProps,
   SelectLayout,
 } from '../SelectBase'
-import { NoResults } from '../Autocomplete/NoResults'
 import { useAutocomplete } from '../Autocomplete/hooks/useAutocomplete'
 import { useToggleButton } from '../Autocomplete/hooks/useToggleButton'
 import { useExternalId } from '../../hooks/useExternalId'
@@ -16,23 +14,32 @@ import { useHighlightedIndex } from '../Autocomplete/hooks/useHighlightedIndex'
 import { useMenuVisibility } from '../SelectBase/hooks/useMenuVisibility'
 import { AutocompleteProps } from '../Autocomplete'
 
-export interface ComboboxProps extends AutocompleteProps {
-  text?: string
+// export interface ComboboxProps extends AutocompleteProps {
+//   onNotInList?: (newValue: string) => void
+// }
+
+export type ComboboxProps = Omit<
+  AutocompleteProps,
+  'initialIsOpen' | 'onBlur' | 'value'| 'hideClearButton'
+> & {
+  /**
+   * Called after the text input is changed and there is no match
+   * @param newValue
+   */
   onNotInList?: (newValue: string) => void
 }
 
-export const Combobox: React.FC<ComboboxProps> = ({
-  children,
-  id: externalId,
-  initialIsOpen,
-  initialValue,
-  isInvalid = false,
-  onBlur,
-  onNotInList,
-  onChange,
-  value,
-  ...rest
-}) => {
+export const Combobox: React.FC<ComboboxProps> = (props: ComboboxProps) => {
+  const {
+    children,
+    id: externalId,
+    initialValue,
+    isInvalid = false,
+    onNotInList,
+    onChange,
+    ...rest
+  } = props
+
   const {
     filteredItems,
     hasError: hasNoMatchingItems,
@@ -52,8 +59,6 @@ export const Combobox: React.FC<ComboboxProps> = ({
   } = useToggleButton(inputRef)
   const id = useExternalId('autocomplete', externalId)
 
-  const isControlled = value !== undefined
-
   const {
     getComboboxProps,
     getInputProps,
@@ -69,7 +74,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
     setHighlightedIndex,
     setInputValue,
   } = useCombobox<string>({
-    initialIsOpen,
+    initialIsOpen: false,
     items: filteredItems.map((item) => item.props.value),
     itemToString: (item) => itemToString(item, itemsMap),
     onInputValueChange,
@@ -85,12 +90,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
 
       focusToggleButton()
     },
-    ...{
-      [isControlled ? 'selectedItem' : 'initialSelectedItem']: getSelectedItem(
-        isControlled ? value : initialValue,
-        itemsMap
-      ),
-    },
+    initialSelectedItem: getSelectedItem(initialValue, itemsMap),
   })
 
   const { onInputBlurHandler, onInputTabKeyHandler } = useHighlightedIndex(
@@ -108,9 +108,8 @@ export const Combobox: React.FC<ComboboxProps> = ({
     useCallback(
       (...args) => {
         onInputBlurHandler()
-        onBlur?.(...args)
       },
-      [onBlur, onInputBlurHandler]
+      [onInputBlurHandler]
     )
 
   const handleInputScroll: React.UIEventHandler<HTMLInputElement> = useCallback(
@@ -130,28 +129,45 @@ export const Combobox: React.FC<ComboboxProps> = ({
       ? ''
       : itemsMap[selectedItem].props.children
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && isNewValue) {
-      if (onNotInList) {
-        onNotInList(inputValue)
-      }
-
-      // @ts-ignore - prevents the inputText being reset
-      e.nativeEvent.preventDownshiftDefault = true
-    }
-
-    if (e.key === 'Tab' && isNewValue) {
-      if (onNotInList) {
-        onNotInList(inputValue)
-      }
-    }
-
-    onInputTabKeyHandler(e)
-    onInputEscapeKeyHandler(e)
-  }
-
   const isNewValue = !!(inputValue && !filteredItems.length)
   const hasMatches = !isNewValue
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter' && isNewValue) {
+        if (onNotInList) {
+          onNotInList(inputValue)
+        }
+
+        // @ts-ignore - prevents the inputText being reset
+        e.nativeEvent.preventDownshiftDefault = true
+      }
+
+      if (e.key === 'Tab' && isNewValue) {
+        if (onNotInList) {
+          onNotInList(inputValue)
+        }
+      }
+
+      // What behaviour if press escape when isNewValue == true?
+      if (e.key === 'Escape' && isNewValue) {
+        console.log('escape new value')
+        setHighlightedIndex(-1)
+        return
+      }
+
+      onInputTabKeyHandler(e)
+      onInputEscapeKeyHandler(e)
+    },
+    [
+      inputValue,
+      isNewValue,
+      onInputEscapeKeyHandler,
+      onInputTabKeyHandler,
+      onNotInList,
+      setHighlightedIndex,
+    ]
+  )
 
   return (
     <SelectLayout
@@ -198,9 +214,6 @@ export const Combobox: React.FC<ComboboxProps> = ({
             title: child.props.children,
           })
         })}
-      {inputValue && !filteredItems.length && (
-        <NoResults>{inputValue}</NoResults>
-      )}
     </SelectLayout>
   )
 }
