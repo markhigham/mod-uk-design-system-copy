@@ -27,13 +27,14 @@ export const Combobox: React.FC<ComboboxProps> = ({
   initialValue,
   isInvalid = false,
   onBlur,
+  onNotInList,
   onChange,
   value,
   ...rest
 }) => {
   const {
     filteredItems,
-    hasError,
+    hasError: hasNoMatchingItems,
     hasFilter,
     inputRef,
     itemsMap,
@@ -128,10 +129,15 @@ export const Combobox: React.FC<ComboboxProps> = ({
       ? ''
       : itemsMap[selectedItem].props.children
 
+
+  const isNewValue= !!(inputValue && !filteredItems.length)
+  const hasMatches = !isNewValue
+
   return (
     <SelectLayout
       hasLabelFocus={isOpen}
       hasSelectedItem={!!inputValue}
+      hideArrowButton={isNewValue}
       id={id}
       inputProps={getInputProps({
         onBlur: handleInputBlur,
@@ -139,6 +145,10 @@ export const Combobox: React.FC<ComboboxProps> = ({
         onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
           onInputTabKeyHandler(e)
           onInputEscapeKeyHandler(e)
+
+          
+
+
         },
         onScroll: handleInputScroll,
         ref: inputRef,
@@ -146,7 +156,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
       inputWrapperProps={getComboboxProps({
         'aria-expanded': isOpen,
       })}
-      isInvalid={hasError || isInvalid}
+      isInvalid={isInvalid}
       isOpen={isOpen}
       menuProps={getMenuProps()}
       onClearButtonClick={() => {
@@ -175,9 +185,6 @@ export const Combobox: React.FC<ComboboxProps> = ({
             title: child.props.children,
           })
         })}
-      {inputValue && !filteredItems.length && (
-        <NoResults>{inputValue}</NoResults>
-      )}
     </SelectLayout>
   )
 }

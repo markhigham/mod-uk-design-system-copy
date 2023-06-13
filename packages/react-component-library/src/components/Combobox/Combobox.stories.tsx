@@ -1,11 +1,11 @@
 import React from 'react'
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 import styled from 'styled-components'
+import { useArgs } from '@storybook/addons'
 
 
 import { Combobox } from '.'
 import { AutocompleteOption } from '../Autocomplete'
-import { useArgs } from '@storybook/addons'
 
 
 export default {
