@@ -34,12 +34,9 @@ const Template: ComponentStory<typeof Combobox> = (args) => {
 
   return (
     <StyledWrapper $isDisabled={args.isDisabled}>
-      is new item: {isNew ? 'yes' : 'no'}
-      <br />
-      Selected value:{value}
-      <br />
-      Chosen text:{text}
-      <br />
+      <pre>isNew:{isNew ? 'yes' : 'no'}</pre>
+      <pre>value:{value}</pre>
+      <pre>typed {text}</pre>
       <Combobox
         {...args}
         // initialValue="one"
