@@ -12,7 +12,7 @@ import { AutocompleteProps } from '../Autocomplete'
 
 export type ComboboxProps = Omit<
   AutocompleteProps,
-  'initialIsOpen'
+  'initialIsOpen' | 'value'
 > & {
   /**
    * Called after the text input is changed and there is no match
@@ -26,7 +26,6 @@ export const Combobox: React.FC<ComboboxProps> = (props: ComboboxProps) => {
     children,
     id: externalId,
     initialValue,
-    value,
     isInvalid = false,
     onNotInList,
     hideClearButton,
@@ -53,8 +52,6 @@ export const Combobox: React.FC<ComboboxProps> = (props: ComboboxProps) => {
     onToggleButtonKeyDownHandler,
   } = useToggleButton(inputRef)
   const id = useExternalId('autocomplete', externalId)
-
-  const isControlled = value !== undefined
 
   const {
     getComboboxProps,
@@ -87,13 +84,7 @@ export const Combobox: React.FC<ComboboxProps> = (props: ComboboxProps) => {
 
       focusToggleButton()
     },
-    ...{
-      [isControlled ? 'selectedItem' : 'initialSelectedItem']: getSelectedItem(
-        isControlled ? value : initialValue,
-        itemsMap
-      ),
-    }
-    // initialSelectedItem: getSelectedItem(initialValue, itemsMap),
+    initialSelectedItem: getSelectedItem(initialValue, itemsMap),
   })
 
   const { onInputBlurHandler, onInputTabKeyHandler } = useHighlightedIndex(

@@ -200,7 +200,7 @@ describe('Combobox', () => {
     })
   })
 
-  describe('when the component is controlled with "One" selected', () => {
+  describe('when the component has initialValue "One" selected', () => {
     const ControlledAutocomplete = () => {
       const [value, setValue] = React.useState<string | null>('one')
 
@@ -209,7 +209,7 @@ describe('Combobox', () => {
           id="autocomplete-id"
           label="Label"
           onChange={(newValue) => setValue(newValue)}
-          value={value}
+          initialValue={value}
         >
           <AutocompleteOption value="one">One</AutocompleteOption>
           <AutocompleteOption value="two">Two</AutocompleteOption>
@@ -261,7 +261,7 @@ describe('Combobox', () => {
           id="autocomplete-id"
           label="Label"
           onChange={jest.fn()}
-          value="one"
+          initialValue="one"
         >
           <AutocompleteOption value="one">One</AutocompleteOption>
           <AutocompleteOption value="two">Two</AutocompleteOption>
@@ -292,7 +292,7 @@ describe('Combobox', () => {
           id="autocomplete-id"
           label="Label"
           onChange={jest.fn()}
-          value="one"
+          initialValue="one"
         >
           <>{}</>
         </Combobox>
@@ -302,7 +302,7 @@ describe('Combobox', () => {
           id="autocomplete-id"
           label="Label"
           onChange={jest.fn()}
-          value="one"
+          initialValue="one"
         >
           <AutocompleteOption value="one">One</AutocompleteOption>
           <AutocompleteOption value="two">Two</AutocompleteOption>
