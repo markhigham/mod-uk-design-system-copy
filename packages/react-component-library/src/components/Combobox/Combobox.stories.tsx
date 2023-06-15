@@ -1,12 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 import styled from 'styled-components'
 
-
 import { Combobox } from '.'
 import { AutocompleteOption } from '../Autocomplete'
-import { useArgs } from '@storybook/addons'
-
 
 export default {
   component: Combobox,
@@ -25,11 +22,35 @@ const StyledWrapper = styled.div<{ $isDisabled?: boolean }>`
 `
 
 const Template: ComponentStory<typeof Combobox> = (args) => {
-  const [{value}, updateArgs] = useArgs()
+  const [{ value, text, isNew }, setValues] = useState<{
+    isNew?: boolean
+    value: string
+    text: string
+  }>({
+    isNew: false,
+    value: '',
+    text: '',
+  })
+
   return (
     <StyledWrapper $isDisabled={args.isDisabled}>
-      {value}
-      <Combobox {...args} value={value} onChange={(v)=> {updateArgs({value: v})}}>
+      <pre>isNew:{isNew ? 'yes' : 'no'}</pre>
+      <pre>value:{value}</pre>
+      <pre>typed {text}</pre>
+      <Combobox
+        {...args}
+        // initialValue="one"
+        onNotInList={(newValue) => {
+          setValues((p) => {
+            return { value: '', text: newValue, isNew: true }
+          })
+        }}
+        onChange={(changedValue) => {
+          setValues((p) => {
+            return { isNew: false, text: '', value: changedValue || '' }
+          })
+        }}
+      >
         <AutocompleteOption value="one">One</AutocompleteOption>
         <AutocompleteOption value="two">Two</AutocompleteOption>
         <AutocompleteOption value="three">Three</AutocompleteOption>
