@@ -12,7 +12,7 @@ import { AutocompleteProps } from '../Autocomplete'
 
 export type ComboboxProps = Omit<
   AutocompleteProps,
-  'initialIsOpen' | 'value'
+  'initialIsOpen'
 > & {
   /**
    * Called after the text input is changed and there is no match
@@ -29,6 +29,7 @@ export const Combobox: React.FC<ComboboxProps> = (props: ComboboxProps) => {
     isInvalid = false,
     onNotInList,
     hideClearButton,
+    value,
     onBlur,
     onChange,
     ...rest
